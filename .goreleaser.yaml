@@ -1,0 +1,52 @@
+version: 2
+
+release:
+  mode: replace
+
+builds:
+  - id: http-tap
+    main: .
+    binary: http-tap
+    ldflags:
+      - -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+  - id: http-tapd
+    main: ./cmd/http-tapd
+    binary: http-tapd
+    ldflags:
+      - -X main.version={{.Version}}
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - ids:
+      - http-tap
+      - http-tapd
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+brews:
+  - name: http-tap
+    homepage: https://github.com/mickamy/http-tap
+    description: Watch HTTP traffic in real-time with a TUI
+    install: |
+      bin.install "http-tap"
+      bin.install "http-tapd"
+    repository:
+      owner: mickamy
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+
+changelog:
+  sort: asc
