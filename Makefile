@@ -2,7 +2,7 @@ BUILD_DIR = bin
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 LDFLAGS = -ldflags "-X main.version=$(VERSION)"
 
-.PHONY: all build build-http-tap build-http-tapd install uninstall docker clean test lint
+.PHONY: all build build-http-tap build-http-tapd install uninstall clean test lint proto
 
 all: build
 
@@ -35,9 +35,12 @@ uninstall:
 	fi; \
 	rm -f "$$bin_dir/http-tap" "$$bin_dir/http-tapd"
 
-docker:
-	@echo "Building http-tapd Docker image..."
-	docker build -t ghcr.io/mickamy/http-tapd:latest .
+proto:
+	@command -v buf >/dev/null 2>&1 || { \
+		echo "buf is not installed: https://buf.build/docs/installation"; \
+		exit 1; \
+	}
+	buf generate
 
 clean:
 	@echo "Cleaning up..."
