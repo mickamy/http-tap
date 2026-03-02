@@ -35,10 +35,6 @@ uninstall:
 	fi; \
 	rm -f "$$bin_dir/http-tap" "$$bin_dir/http-tapd"
 
-docker:
-	@echo "Building http-tapd Docker image..."
-	docker build -t ghcr.io/mickamy/http-tapd:latest .
-
 clean:
 	@echo "Cleaning up..."
 	rm -rf $(BUILD_DIR)
