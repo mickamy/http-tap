@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package tap.v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message HTTPEvent {
+  string id = 1;
+  string method = 2;       // HTTP method: GET, POST, PUT, DELETE, etc.
+  string path = 3;         // Request path including query string.
+  int32 status = 4;        // HTTP status code.
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Duration duration = 6;
+  string error = 7;
+  map<string, string> request_headers = 8;
+  map<string, string> response_headers = 9;
+  bytes request_body = 10;
+  bytes response_body = 11;
+}
+
+message WatchRequest {}
+
+message WatchResponse {
+  HTTPEvent event = 1;
+}
+
+message ReplayRequest {
+  string method = 1;               // HTTP method.
+  string path = 2;                 // Request path with query string.
+  map<string, string> headers = 3; // Request headers to send.
+  bytes body = 4;                  // Request body.
+}
+
+message ReplayResponse {
+  HTTPEvent event = 1;
+}
+
+service TapService {
+  rpc Watch(WatchRequest) returns (stream WatchResponse);
+  rpc Replay(ReplayRequest) returns (ReplayResponse);
+}
