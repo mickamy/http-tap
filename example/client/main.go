@@ -58,9 +58,9 @@ func doRequest(ctx context.Context, client *http.Client, method, url, body strin
 		bodyReader = bytes.NewBufferString(body)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader) //nolint:gosec // G704: URL is from configuration
 	if err != nil {
-		log.Printf("[%s %s] error creating request: %v", method, url, err)
+		log.Printf("[%s %s] error creating request: %v", method, url, err) //nolint:gosec // G706: example code
 		return
 	}
 	if body != "" {
@@ -72,7 +72,7 @@ func doRequest(ctx context.Context, client *http.Client, method, url, body strin
 		if ctx.Err() != nil {
 			return
 		}
-		log.Printf("[%s %s] error: %v", method, url, err)
+		log.Printf("[%s %s] error: %v", method, url, err) //nolint:gosec // G706: example code
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()

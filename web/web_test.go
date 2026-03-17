@@ -21,10 +21,12 @@ type fakeProxy struct {
 }
 
 func (f *fakeProxy) ListenAndServe(context.Context) error { return nil }
-func (f *fakeProxy) Events() <-chan proxy.Event            { return nil }
-func (f *fakeProxy) Close() error                          { return nil }
+func (f *fakeProxy) Events() <-chan proxy.Event           { return nil }
+func (f *fakeProxy) Close() error                         { return nil }
 
-func (f *fakeProxy) Replay(ctx context.Context, method, path string, headers http.Header, body []byte) (proxy.Event, error) {
+func (f *fakeProxy) Replay(
+	ctx context.Context, method, path string, headers http.Header, body []byte,
+) (proxy.Event, error) {
 	if f.replayFunc != nil {
 		return f.replayFunc(ctx, method, path, headers, body)
 	}
@@ -49,7 +51,7 @@ func doPost(t *testing.T, ts *httptest.Server, body string) *http.Response {
 		t.Fatal(err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := ts.Client().Do(req) //nolint:gosec // test code
+	resp, err := ts.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +74,7 @@ func TestSSE(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := ts.Client().Do(req) //nolint:gosec // test code
+	resp, err := ts.Client().Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -194,7 +196,7 @@ func TestReplay(t *testing.T) {
 	if result.Event.ID != "replay-1" {
 		t.Errorf("id = %q, want %q", result.Event.ID, "replay-1")
 	}
-	if result.Event.Method != "POST" {
+	if result.Event.Method != http.MethodPost {
 		t.Errorf("method = %q, want %q", result.Event.Method, "POST")
 	}
 	if result.Event.Path != "/api/users" {

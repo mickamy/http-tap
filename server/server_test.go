@@ -22,10 +22,12 @@ type fakeProxy struct {
 }
 
 func (f *fakeProxy) ListenAndServe(context.Context) error { return nil }
-func (f *fakeProxy) Events() <-chan proxy.Event            { return nil }
-func (f *fakeProxy) Close() error                          { return nil }
+func (f *fakeProxy) Events() <-chan proxy.Event           { return nil }
+func (f *fakeProxy) Close() error                         { return nil }
 
-func (f *fakeProxy) Replay(ctx context.Context, method, path string, headers http.Header, body []byte) (proxy.Event, error) {
+func (f *fakeProxy) Replay(
+	ctx context.Context, method, path string, headers http.Header, body []byte,
+) (proxy.Event, error) {
 	if f.replayFunc != nil {
 		return f.replayFunc(ctx, method, path, headers, body)
 	}

@@ -108,7 +108,9 @@ func (rp *ReverseProxy) Close() error {
 
 // Replay sends an HTTP request to the upstream server and returns the resulting event.
 // The event is also published to the events channel.
-func (rp *ReverseProxy) Replay(ctx context.Context, method, path string, headers http.Header, body []byte) (Event, error) {
+func (rp *ReverseProxy) Replay(
+	ctx context.Context, method, path string, headers http.Header, body []byte,
+) (Event, error) {
 	start := time.Now()
 
 	upstreamURL := rp.buildUpstreamURL(path)
@@ -141,7 +143,7 @@ func (rp *ReverseProxy) Replay(ctx context.Context, method, path string, headers
 		ID:              uuid.New().String(),
 		Method:          method,
 		Path:            path,
-		Status:          int32(resp.StatusCode),
+		Status:          int32(resp.StatusCode), //nolint:gosec // G115: HTTP status fits int32
 		StartTime:       start,
 		Duration:        time.Since(start),
 		RequestHeaders:  req.Header.Clone(),
@@ -166,6 +168,7 @@ func (rp *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	upstreamURL := rp.buildUpstreamURL(r.URL.RequestURI())
 
+	//nolint:gosec // G704: URL from configured upstream
 	outReq, err := http.NewRequestWithContext(r.Context(), r.Method, upstreamURL, reqCapture)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
@@ -226,7 +229,7 @@ func (rp *ReverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ID:              uuid.New().String(),
 		Method:          r.Method,
 		Path:            r.URL.RequestURI(),
-		Status:          int32(resp.StatusCode),
+		Status:          int32(resp.StatusCode), //nolint:gosec // G115: HTTP status fits int32
 		StartTime:       start,
 		Duration:        time.Since(start),
 		RequestHeaders:  r.Header.Clone(),
@@ -245,9 +248,9 @@ func (rp *ReverseProxy) emitEvent(ev Event) {
 
 func (rp *ReverseProxy) buildUpstreamURL(reqPath string) string {
 	u := *rp.upstream
-	if idx := strings.IndexByte(reqPath, '?'); idx >= 0 {
-		u.Path = singleJoiningSlash(rp.upstream.Path, reqPath[:idx])
-		u.RawQuery = reqPath[idx+1:]
+	if path, query, ok := strings.Cut(reqPath, "?"); ok {
+		u.Path = singleJoiningSlash(rp.upstream.Path, path)
+		u.RawQuery = query
 	} else {
 		u.Path = singleJoiningSlash(rp.upstream.Path, reqPath)
 	}

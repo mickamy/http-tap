@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -106,7 +107,7 @@ func statusString(status int32) string {
 	}
 	text := http.StatusText(int(status))
 	if text == "" {
-		return fmt.Sprintf("%d", status)
+		return strconv.Itoa(int(status))
 	}
 	return fmt.Sprintf("%d %s", status, text)
 }

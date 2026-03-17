@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -484,7 +485,7 @@ func (m Model) renderListView() string {
 
 		method := ev.GetMethod()
 		path := truncate(ev.GetPath(), colPath)
-		status := fmt.Sprintf("%d", ev.GetStatus())
+		status := strconv.Itoa(int(ev.GetStatus()))
 		if ev.GetStatus() == 0 {
 			status = "ERR"
 		}

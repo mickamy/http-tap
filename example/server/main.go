@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand/v2"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -45,7 +46,7 @@ func handleListUsers(w http.ResponseWriter, _ *http.Request) {
 func handleGetUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	for _, u := range users {
-		if fmt.Sprintf("%d", u.ID) == id {
+		if strconv.Itoa(u.ID) == id {
 			writeJSON(w, http.StatusOK, u)
 			return
 		}
@@ -73,7 +74,7 @@ func handleCreateUser(w http.ResponseWriter, r *http.Request) {
 func handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	for i, u := range users {
-		if fmt.Sprintf("%d", u.ID) == id {
+		if strconv.Itoa(u.ID) == id {
 			users = append(users[:i], users[i+1:]...)
 			w.WriteHeader(http.StatusNoContent)
 			return
@@ -95,5 +96,7 @@ func handleError(w http.ResponseWriter, _ *http.Request) {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(v)
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }

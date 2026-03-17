@@ -3,6 +3,7 @@ package proxy_test
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -77,7 +78,7 @@ func TestCaptureReader_SmallReads(t *testing.T) {
 	for {
 		n, err := cr.Read(buf)
 		total = append(total, buf[:n]...)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

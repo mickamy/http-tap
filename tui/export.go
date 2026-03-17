@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -262,7 +263,7 @@ func formatStatusMarkdown(status int32) string {
 	if status == 0 {
 		return "ERR"
 	}
-	return fmt.Sprintf("%d", status)
+	return strconv.Itoa(int(status))
 }
 
 func escapeMarkdownPipe(s string) string {

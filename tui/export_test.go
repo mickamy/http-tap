@@ -7,10 +7,11 @@ import (
 	"testing"
 	"time"
 
-	tapv1 "github.com/mickamy/http-tap/gen/tap/v1"
-	"github.com/mickamy/http-tap/tui"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+
+	tapv1 "github.com/mickamy/http-tap/gen/tap/v1"
+	"github.com/mickamy/http-tap/tui"
 )
 
 func makeEvent(method, path string, status int32, dur time.Duration, errMsg string) *tapv1.HTTPEvent {
@@ -40,16 +41,16 @@ func TestWriteExport_JSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: test code
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var result struct {
-		Captured  int `json:"captured"`
-		Exported  int `json:"exported"`
-		Calls     []json.RawMessage
-		Analytics []json.RawMessage
+		Captured  int               `json:"captured"`
+		Exported  int               `json:"exported"`
+		Calls     []json.RawMessage `json:"calls"`
+		Analytics []json.RawMessage `json:"analytics"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
@@ -84,15 +85,15 @@ func TestWriteExport_JSON_WithFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: test code
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	var result struct {
-		Captured int `json:"captured"`
-		Exported int `json:"exported"`
-		Search   string
+		Captured int    `json:"captured"`
+		Exported int    `json:"exported"`
+		Search   string `json:"search"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
@@ -124,7 +125,7 @@ func TestWriteExport_JSON_ErrorsOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: test code
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +135,7 @@ func TestWriteExport_JSON_ErrorsOnly(t *testing.T) {
 		Calls    []struct {
 			Status int32  `json:"status"`
 			Error  string `json:"error"`
-		}
+		} `json:"calls"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
@@ -164,7 +165,7 @@ func TestWriteExport_Markdown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: test code
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -26,7 +26,7 @@ func (cr *CaptureReader) Read(p []byte) (int, error) {
 		take := min(n, remaining)
 		cr.buf = append(cr.buf, p[:take]...)
 	}
-	return n, err
+	return n, err //nolint:wrapcheck // io.Reader contract requires unwrapped errors
 }
 
 // Bytes returns the captured bytes so far.

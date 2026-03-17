@@ -13,103 +13,6 @@ import (
 	"github.com/mickamy/http-tap/proxy"
 )
 
-// startProxy creates a ReverseProxy pointing at upstream and starts it.
-// It returns the proxy's base URL and a cleanup function.
-func startProxy(t *testing.T, upstreamURL string, opts ...proxy.Option) (string, *proxy.ReverseProxy) {
-	t.Helper()
-
-	p, err := proxy.New("localhost:0", upstreamURL, opts...)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := t.Context()
-
-	// We need the actual address, so listen manually.
-	started := make(chan string, 1)
-	go func() {
-		// ListenAndServe will block; we detect the address from Events.
-		// Actually, let's use a different approach: start and get the port.
-		_ = p.ListenAndServe(ctx)
-	}()
-
-	// Give the server a moment to start.
-	// A better approach: we'll create with a known port.
-	_ = started
-	t.Cleanup(func() { _ = p.Close() })
-	return "", p
-}
-
-func startTestProxy(t *testing.T, upstream *httptest.Server) (*proxy.ReverseProxy, string) {
-	t.Helper()
-
-	p, err := proxy.New("localhost:0", upstream.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := t.Context()
-
-	// Start in background and wait for it to be ready by trying connections.
-	errCh := make(chan error, 1)
-	go func() {
-		errCh <- p.ListenAndServe(ctx)
-	}()
-
-	// Poll until the proxy is accepting connections.
-	var proxyURL string
-	deadline := time.After(5 * time.Second)
-	for {
-		select {
-		case err := <-errCh:
-			t.Fatalf("proxy exited early: %v", err)
-		case <-deadline:
-			t.Fatal("timed out waiting for proxy to start")
-		default:
-		}
-		// Try to reach the proxy by sending a request.
-		// We need the actual port. Since we used ":0", extract it from events channel.
-		// Actually, let's use a simpler approach — read the server's Addr after starting.
-		break
-	}
-	_ = proxyURL
-
-	t.Cleanup(func() { _ = p.Close() })
-	return p, ""
-}
-
-// newUpstreamAndProxy creates a test upstream server and a proxy in front of it.
-// Returns the proxy URL and event channel.
-func newUpstreamAndProxy(t *testing.T, handler http.Handler) (proxyURL string, events <-chan proxy.Event) {
-	t.Helper()
-
-	upstream := httptest.NewServer(handler)
-	t.Cleanup(upstream.Close)
-
-	p, err := proxy.New(":0", upstream.URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	ctx := t.Context()
-	ready := make(chan string, 1)
-
-	// We can't easily get the port from proxy.New with ":0".
-	// Let's use a wrapper approach: start a listener, get its addr, then use it.
-	go func() {
-		_ = p.ListenAndServe(ctx)
-	}()
-
-	// Wait for proxy to be ready by polling.
-	_ = ready
-
-	t.Cleanup(func() { _ = p.Close() })
-	return "", p.Events()
-}
-
-// Since the proxy uses ":0" and we cannot easily retrieve the bound port
-// from the outside, we'll use httptest-style tests with ServeHTTP directly.
-
 func TestServeHTTP_ForwardsRequest(t *testing.T) {
 	t.Parallel()
 
@@ -127,7 +30,7 @@ func TestServeHTTP_ForwardsRequest(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/users?page=1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/users?page=1", nil) //nolint:noctx // test code
 	req.Header.Set("Accept", "application/json")
 
 	p.ServeHTTP(rec, req)
@@ -186,7 +89,7 @@ func TestServeHTTP_CapturesRequestBody(t *testing.T) {
 
 	reqBody := `{"name":"Alice"}`
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(reqBody))
+	req := httptest.NewRequest(http.MethodPost, "/api/users", strings.NewReader(reqBody)) //nolint:noctx // test code
 	req.Header.Set("Content-Type", "application/json")
 
 	p.ServeHTTP(rec, req)
@@ -223,7 +126,7 @@ func TestServeHTTP_CapturesResponseBody(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/users/42", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/users/42", nil) //nolint:noctx // test code
 
 	p.ServeHTTP(rec, req)
 
@@ -251,7 +154,7 @@ func TestServeHTTP_HopByHopRemoved(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil) //nolint:noctx // test code
 	req.Header.Set("Connection", "close")
 	req.Header.Set("Keep-Alive", "timeout=5")
 
@@ -291,7 +194,7 @@ func TestServeHTTP_XForwardedFor(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil) //nolint:noctx // test code
 	// httptest.NewRequest sets RemoteAddr to "192.0.2.1:1234".
 
 	p.ServeHTTP(rec, req)
@@ -317,7 +220,7 @@ func TestServeHTTP_XForwardedFor_Appended(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil) //nolint:noctx // test code
 	req.Header.Set("X-Forwarded-For", "10.0.0.1")
 
 	p.ServeHTTP(rec, req)
@@ -346,7 +249,7 @@ func TestServeHTTP_GzipResponse(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/api/data", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/data", nil) //nolint:noctx // test code
 
 	p.ServeHTTP(rec, req)
 
@@ -372,7 +275,7 @@ func TestServeHTTP_LargeBodyTruncated(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil) //nolint:noctx // test code
 
 	p.ServeHTTP(rec, req)
 
@@ -404,7 +307,7 @@ func TestServeHTTP_UpstreamError(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil) //nolint:noctx // test code
 
 	p.ServeHTTP(rec, req)
 
